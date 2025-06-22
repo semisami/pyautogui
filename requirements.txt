@@ -1,0 +1,6 @@
+pyautogui
+psutil
+opencv-python
+pynput
+pillow
+customtkinter

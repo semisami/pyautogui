@@ -11,8 +11,7 @@ import numpy as np
 import json
 from tkinter import Tk, Button, Label, Entry, messagebox
 from pynput import mouse, keyboard
-# from PIL import Image
-from datetime import datetime
+from PIL import Image
 
 # تنظیمات لاگینگ
 logging.basicConfig(
@@ -27,7 +26,7 @@ CONFIG = {
     'confidence': 0.7,
     'image_timeout': 10,
     'browser_process_name': 'chrome',
-    'mouse_move_threshold': 1000,
+    'mouse_move_threshold': 50,
     'image_paths': {
         'chatgpt': 'assets/chatGPT.png',
         'tools': 'assets/tools.png',
@@ -40,15 +39,15 @@ CONFIG = {
         'sendinsta': 'assets/sendinsta.png'
     },
     'image_configs': {
-        'chatgpt': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': [0.5, 0.7, 0.9, 1.0, 1.1, 1.3, 1.5, 1.7, 2.0], 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        'tools': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': [0.5, 0.7, 0.9, 1.0, 1.1, 1.3, 1.5, 1.7, 2.0], 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        'sendgpt': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': [0.5, 0.7, 0.9, 1.0, 1.1, 1.3, 1.5, 1.7, 2.0], 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        'msg': {'default_scale': 1.0, 'default_confidence': 0.9, 'scale_range': [0.5, 0.7, 0.9, 1.0, 1.1, 1.3, 1.5, 1.7, 2.0], 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        'instagram': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': [0.5, 0.7, 0.9, 1.0, 1.1, 1.3, 1.5, 1.7, 2.0], 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        '3dot': {'default_scale': 1.0, 'default_confidence': 0.8, 'scale_range': np.arange(0.9, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        'cpmsg': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': [0.5, 0.7, 0.9, 1.0, 1.1, 1.3, 1.5, 1.7, 2.0], 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        'cpgpt': {'default_scale': 1.0, 'default_confidence': 0.6, 'scale_range': [0.5, 0.7, 0.9, 1.0, 1.1, 1.3, 1.5, 1.7, 2.0], 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        'sendinsta': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': [0.5, 0.7, 0.9, 1.0, 1.1, 1.3, 1.5, 1.7, 2.0], 'confidence_range': [0.6, 0.7, 0.8, 0.9]}
+        'chatgpt': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': np.arange(0.4, 1.5, 0.05).tolist(), 'upscale_template': 2.0},
+        'tools': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': np.arange(0.4, 1.5, 0.05).tolist(), 'upscale_template': 2.0},
+        'sendgpt': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': np.arange(0.4, 1.5, 0.05).tolist(), 'upscale_template': 2.0},
+        'msg': {'default_scale': 1.0, 'default_confidence': 0.9, 'scale_range': np.arange(0.4, 1.5, 0.05).tolist(), 'upscale_template': 2.0},
+        'instagram': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': np.arange(0.4, 1.5, 0.05).tolist(), 'upscale_template': 2.0},
+        '3dot': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': np.arange(0.4, 1.5, 0.05).tolist(), 'upscale_template': 2.0},
+        'cpmsg': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': np.arange(0.4, 1.5, 0.05).tolist(), 'upscale_template': 2.0},
+        'cpgpt': {'default_scale': 1.0, 'default_confidence': 0.6, 'scale_range': np.arange(0.4, 1.5, 0.05).tolist(), 'upscale_template': 2.0},
+        'sendinsta': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': np.arange(0.4, 1.5, 0.05).tolist(), 'upscale_template': 2.0}
     },
     'color_dict': {
         'newmsg': (38, 38, 38),
@@ -64,7 +63,7 @@ CONFIG = {
     },
     'loop_count': 100,
     'default_instagram_url': 'https://www.instagram.com/direct/t/17842735848513381/',
-    'default_prompt': 'سلام، لطفا جواب های کوتاه  و ساده بده...',
+    'default_prompt': 'سلام، لطفا جواب های کوتاه و ساده بده...',
     'config_file': 'image_configs.json'
 }
 
@@ -84,6 +83,7 @@ def load_image_configs():
                 if key in loaded_configs:
                     CONFIG['image_configs'][key]['default_scale'] = loaded_configs[key].get('default_scale', 1.0)
                     CONFIG['image_configs'][key]['default_confidence'] = loaded_configs[key].get('default_confidence', CONFIG['image_configs'][key]['default_confidence'])
+                    CONFIG['image_configs'][key]['upscale_template'] = loaded_configs[key].get('upscale_template', 2.0)
             logger.info("Loaded image configurations from JSON")
     except Exception as e:
         logger.error(f"Error loading image configs: {str(e)}")
@@ -93,7 +93,8 @@ def save_image_configs():
         configs_to_save = {
             key: {
                 'default_scale': CONFIG['image_configs'][key]['default_scale'],
-                'default_confidence': CONFIG['image_configs'][key]['default_confidence']
+                'default_confidence': CONFIG['image_configs'][key]['default_confidence'],
+                'upscale_template': CONFIG['image_configs'][key]['upscale_template']
             } for key in CONFIG['image_configs']
         }
         with open(CONFIG['config_file'], 'w') as f:
@@ -127,117 +128,68 @@ def find_image(image_path, image_key):
         screenshot = pyautogui.screenshot()
         screen_img = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2GRAY)
         
-        best_score = -1
-        best_location = None
-        best_scale = CONFIG['image_configs'][image_key]['default_scale']
-        best_confidence = CONFIG['image_configs'][image_key]['default_confidence']
+        # تلاش اولیه با تنظیمات پیش‌فرض
+        default_scale = CONFIG['image_configs'][image_key]['default_scale']
+        default_confidence = CONFIG['image_configs'][image_key]['default_confidence']
         
-        # تست مقیاس و confidence پیش‌فرض
-        scaled_template = cv2.resize(template, None, fx=best_scale, fy=best_scale, interpolation=cv2.INTER_AREA)
+        scaled_template = cv2.resize(template, None, fx=default_scale, fy=default_scale, interpolation=cv2.INTER_AREA)
         result = cv2.matchTemplate(screen_img, scaled_template, cv2.TM_CCOEFF_NORMED)
-        _, max_val, _, max_loc = cv2.minMaxLoc(result)
-        if max_val >= best_confidence:
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+        
+        if max_val >= default_confidence:
             h, w = scaled_template.shape
-            best_score = max_val
-            best_location = (max_loc[0], max_loc[1], w, h)
-            logger.info(f"Image {image_path} found at {max_loc} with default scale {best_scale}, confidence {best_confidence}, score {max_val}")
+            logger.info(f"Image {image_path} found at {max_loc} with default scale {default_scale}, confidence {max_val}")
+            return (max_loc[0], max_loc[1], w, h)
         
-        # Brute-force روی رنج مقیاس‌ها و confidence‌ها
-        for scale in CONFIG['image_configs'][image_key]['scale_range']:
-            for confidence in CONFIG['image_configs'][image_key]['confidence_range']:
-                if scale == best_scale and confidence == best_confidence:
-                    continue
-                scaled_template = cv2.resize(template, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
-                result = cv2.matchTemplate(screen_img, scaled_template, cv2.TM_CCOEFF_NORMED)
-                _, max_val, _, max_loc = cv2.minMaxLoc(result)
-                
-                if max_val >= confidence and max_val > best_score:
-                    h, w = scaled_template.shape
-                    best_score = max_val
-                    best_location = (max_loc[0], max_loc[1], w, h)
-                    best_scale = scale
-                    best_confidence = confidence
-                    logger.info(f"Image {image_path} found at {max_loc} with scale {scale}, confidence {confidence}, score {max_val}")
+        # اگر تلاش اولیه ناموفق بود، به روش پیشرفته برو
+        logger.info(f"Image {image_path} not found with default settings. Switching to advanced method.")
         
-        if best_location:
+        # تنظیمات روش پیشرفته
+        scales = CONFIG['image_configs'][image_key]['scale_range']
+
+        min_confidence = default_confidence
+        upscale_template = CONFIG['image_configs'][image_key]['upscale_template']
+        
+        # بزرگ‌نمایی تصویر مرجع
+        template = cv2.resize(template, None, fx=upscale_template, fy=upscale_template, interpolation=cv2.INTER_CUBIC)
+        
+        best_val = 0
+        best_rect = None
+        best_scale = default_scale
+        
+        # جستجو در رنج مقیاس‌ها
+        for scale in scales:
+            resized_template = cv2.resize(template, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+            result = cv2.matchTemplate(screen_img, resized_template, cv2.TM_CCOEFF_NORMED)
+            min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+            
+            if max_val > best_val:
+                h, w = resized_template.shape
+                best_val = max_val
+                best_rect = (max_loc[0], max_loc[1], w, h)
+                best_scale = scale * upscale_template  # مقیاس نهایی با در نظر گرفتن بزرگ‌نمایی
+        
+        if best_val >= min_confidence:
+            x, y, w, h = best_rect
+            logger.info(f"Image {image_path} found at ({x},{y}) with size ({w}x{h}), scale {best_scale}, confidence {best_val}")
+            # به‌روزرسانی تنظیمات پیش‌فرض
             CONFIG['image_configs'][image_key]['default_scale'] = best_scale
-            CONFIG['image_configs'][image_key]['default_confidence'] = best_confidence
             save_image_configs()
-            return best_location
-        logger.info(f"Image {image_path} not found")
-        return None
+            return (x, y, w, h)
+        else:
+            logger.info(f"Image {image_path} not found with advanced method")
+            return None
     except Exception as e:
         logger.error(f"Error in find_image: {str(e)}")
-        return None
-
-def save_debug_image(img, name):
-    os.makedirs("logs", exist_ok=True)
-    path = f"logs/{datetime.now().strftime('%Y%m%d_%H%M%S')}_{name}.png"
-    cv2.imwrite(path, img)
-    print(f"[+] Saved: {path}")
-
-def find_image_smart(image_path, scales=np.arange(0.4, 1.5, 0.01).tolist(), min_confidence=0.75, upscale_template=2.0, region=None):
-    if not os.path.exists(image_path):
-        print("❌ Image not found:", image_path)
-        return None
-
-    # خواندن و بزرگ‌کردن تصویر مرجع
-    template = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    template = cv2.resize(template, None, fx=upscale_template, fy=upscale_template, interpolation=cv2.INTER_CUBIC)
-
-    # اسکرین‌شات
-    screenshot = pyautogui.screenshot()
-    screen_img_rgb = np.array(screenshot)
-    screen_img = cv2.cvtColor(screen_img_rgb, cv2.COLOR_RGB2GRAY)
-
-    # اگر منطقه خاصی مشخص شده باشد، اسکرین‌شات را به آن محدوده برش می‌دهیم
-    if region:
-        x, y, w, h = region
-        screen_img = screen_img[y:y+h, x:x+w]
-        screen_img_rgb = screen_img_rgb[y:y+h, x:x+w]
-        # ذخیره تصویر محدوده برای دیباگ
-        save_debug_image(cv2.cvtColor(screen_img_rgb, cv2.COLOR_RGB2BGR), f"region_{os.path.basename(image_path)}_debug")
-
-    # ذخیره نسخه اولیه
-    save_debug_image(template, "template_scaled")
-    save_debug_image(screen_img, "screenshot_gray")
-
-    best_val = 0
-    best_rect = None
-
-    for scale in scales:
-        resized_template = cv2.resize(template, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
-        result = cv2.matchTemplate(screen_img, resized_template, cv2.TM_CCOEFF_NORMED)
-        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
-
-        print(f"Scale {scale:.2f} → Score: {max_val:.4f}")
-        if max_val > best_val:
-            h, w = resized_template.shape
-            best_val = max_val
-            # اگر منطقه خاصی مشخص شده باشد، مختصات را نسبت به منطقه تنظیم می‌کنیم
-            if region:
-                best_rect = (max_loc[0] + x, max_loc[1] + y, w, h)
-            else:
-                best_rect = (max_loc[0], max_loc[1], w, h)
-
-    if best_val >= min_confidence:
-        x, y, w, h = best_rect
-        print(f"✅ Match at ({x},{y}) size=({w}x{h}) | confidence={best_val:.3f}")
-        cv2.rectangle(screen_img_rgb, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        save_debug_image(cv2.cvtColor(screen_img_rgb, cv2.COLOR_RGB2BGR), "match_result")
-        return (x, y, w, h)
-    else:
-        print(f"❌ No good match found. Best confidence: {best_val:.3f}")
         return None
 
 def wait_for_image(image_path, image_key, timeout=CONFIG['image_timeout']):
     try:
         start_time = time.time()
         while time.time() - start_time < timeout:
-            # if find_image(image_path, image_key):
-            if find_image_smart(image_path):
-
+            if find_image(image_path, image_key):
                 logger.info(f"Image {image_path} found within {timeout} seconds")
+
                 return True
             time.sleep(0.5)
         logger.warning(f"Image {image_path} not found within {timeout} seconds")
@@ -248,11 +200,9 @@ def wait_for_image(image_path, image_key, timeout=CONFIG['image_timeout']):
 
 def click_on_image(image_path, image_key, confidence=None):
     try:
-        # استفاده از confidence خاص اگه تعریف شده باشه
         conf = confidence if confidence is not None else CONFIG['image_configs'][image_key]['default_confidence']
         if wait_for_image(image_path, image_key):
-            # location = find_image(image_path, image_key)
-            location = find_image_smart(image_path)
+            location = find_image(image_path, image_key)
             if location:
                 center_x = location[0] + location[2] // 2
                 center_y = location[1] + location[3] // 2
@@ -268,9 +218,7 @@ def click_on_image(image_path, image_key, confidence=None):
 def click_relative_to_image(image_path, image_key, offset_x=0, offset_y=0):
     try:
         if wait_for_image(image_path, image_key):
-            # location = find_image(image_path, image_key)
-            location = find_image_smart(image_path)
-
+            location = find_image(image_path, image_key)
             if location:
                 center_x = location[0] + location[2] // 2
                 center_y = location[1] + location[3] // 2
@@ -291,9 +239,7 @@ def click_relative_to_image(image_path, image_key, offset_x=0, offset_y=0):
 def move_relative_to_image(image_path, image_key, offset_x=0, offset_y=0):
     try:
         if wait_for_image(image_path, image_key):
-            # location = find_image(image_path, image_key)
-            location = find_image_smart(image_path)
-
+            location = find_image(image_path, image_key)
             if location:
                 center_x = location[0] + location[2] // 2
                 center_y = location[1] + location[3] // 2
@@ -313,13 +259,11 @@ def move_relative_to_image(image_path, image_key, offset_x=0, offset_y=0):
 
 def paste_at_cursor():
     try:
-        # تأخیر برای اطمینان از آماده بودن کلیپ‌بورد
         time.sleep(0.5)
-        # لاگ کردن محتوای کلیپ‌بورد
         clipboard_content = pyperclip.paste()
         logger.info(f"Clipboard content before paste: {clipboard_content[:50]}...")
         pyautogui.hotkey('ctrl', 'v')
-        time.sleep(0.5)  # تأخیر بعد از جایگذاری
+        time.sleep(0.5)
         logger.info("Pasted at current cursor position")
         return True
     except Exception as e:
@@ -329,9 +273,7 @@ def paste_at_cursor():
 def capture_image_offset(image_path, image_key, offset_x=0, offset_y=0, region_size=(20, 30)):
     try:
         if wait_for_image(image_path, image_key):
-            # location = find_image(image_path, image_key)
-            location = find_image_smart(image_path)
-
+            location = find_image(image_path, image_key)
             if location:
                 center_x = location[0] + location[2] // 2
                 center_y = location[1] + location[3] // 2
@@ -456,34 +398,7 @@ def automation_loop(chatgpt_prompt, instagram_dm_url):
                         offset_y=CONFIG['offsets']['msg_relative_y']
                     ):
                         continue
-                    # پیدا کردن موقعیت تصویر "msg" برای تعیین محدوده جستجوی "3dot"
-                    msg_location = find_image_smart(resource_path(CONFIG['image_paths']['msg']))
-                    if msg_location:
-                        msg_x, msg_y, msg_w, msg_h = msg_location
-                        # تعریف محدوده افقی برای جستجوی "3dot" (برای مثال، 200 پیکسل عرض و 100 پیکسل ارتفاع)
-                        search_region = (
-                            msg_x - 100,  # شروع x (100 پیکسل قبل از تصویر msg)
-                            msg_y - 50,   # شروع y (50 پیکسل بالای تصویر msg)
-                            200,          # عرض محدوده
-                            100           # ارتفاع محدوده
-                        )
-                        # اطمینان از اینکه محدوده در محدوده صفحه است
-                        search_region = (
-                            max(0, search_region[0]),
-                            max(0, search_region[1]),
-                            min(screen_width - search_region[0], search_region[2]),
-                            min(screen_height - search_region[1], search_region[3])
-                        )
-                        logger.info(f"Searching for 3dot in region: {search_region}")
-                        # جستجوی "3dot" در محدوده مشخص‌شده
-                        if not click_on_image(
-                            resource_path(CONFIG['image_paths']['3dot']),
-                            '3dot',
-                            region=search_region
-                        ):
-                            continue
-                    else:
-                        logger.warning("Could not find 'msg' image to define search region for '3dot'")
+                    if not click_on_image(resource_path(CONFIG['image_paths']['3dot']), '3dot'):
                         continue
                     if not click_on_image(resource_path(CONFIG['image_paths']['cpmsg']), 'cpmsg'):
                         continue
@@ -555,7 +470,6 @@ if __name__ == "__main__":
         pyautogui.FAILSAFE = True
         last_mouse_pos = pyautogui.position()
         
-        # بارگذاری تنظیمات مقیاس‌ها و confidence‌ها
         load_image_configs()
         
         try:
