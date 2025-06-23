@@ -417,6 +417,7 @@ def automation_loop(chatgpt_prompt, instagram_dm_url):
         logger.info(f"Starting automation loop. Screen: {screen_width}x{screen_height}")
         webbrowser.open(instagram_dm_url)
         webbrowser.open("https://chat.openai.com/")
+        time.sleep(5)  # Wait for browser to open
         if not wait_for_image(resource_path(CONFIG['image_paths']['chatgpt']), 'chatgpt'):
             logger.error("Failed to load ChatGPT page")
             return
