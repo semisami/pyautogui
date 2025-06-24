@@ -8,10 +8,8 @@ import pyperclip
 import psutil
 import cv2
 import numpy as np
-import json
 from tkinter import Tk, Button, Label, Entry, messagebox
 from pynput import mouse, keyboard
-# from PIL import Image
 from datetime import datetime
 
 # تنظیمات لاگینگ
@@ -40,15 +38,15 @@ CONFIG = {
         'sendinsta': 'assets/sendinsta.png'
     },
     'image_configs': {
-        'chatgpt': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': [0.5, 0.7, 0.9, 1.0, 1.1, 1.3, 1.5, 1.7, 2.0], 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        'tools': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': [0.5, 0.7, 0.9, 1.0, 1.1, 1.3, 1.5, 1.7, 2.0], 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        'sendgpt': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': [0.5, 0.7, 0.9, 1.0, 1.1, 1.3, 1.5, 1.7, 2.0], 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        'msg': {'default_scale': 1.0, 'default_confidence': 0.9, 'scale_range': [0.5, 0.7, 0.9, 1.0, 1.1, 1.3, 1.5, 1.7, 2.0], 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        'instagram': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': [0.5, 0.7, 0.9, 1.0, 1.1, 1.3, 1.5, 1.7, 2.0], 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        '3dot': {'default_scale': 1.0, 'default_confidence': 0.8, 'scale_range': np.arange(0.9, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        'cpmsg': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': [0.5, 0.7, 0.9, 1.0, 1.1, 1.3, 1.5, 1.7, 2.0], 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        'cpgpt': {'default_scale': 1.0, 'default_confidence': 0.6, 'scale_range': [0.5, 0.7, 0.9, 1.0, 1.1, 1.3, 1.5, 1.7, 2.0], 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        'sendinsta': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': [0.5, 0.7, 0.9, 1.0, 1.1, 1.3, 1.5, 1.7, 2.0], 'confidence_range': [0.6, 0.7, 0.8, 0.9]}
+        'chatgpt': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': np.arange(0.8, 1.2, 0.1).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
+        'tools': {'default_scale': 1.0, 'default_confidence': 0.6, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
+        'sendgpt': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
+        'msg': {'default_scale': 1.0, 'default_confidence': 0.6, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
+        'instagram': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
+        '3dot': {'default_scale': 1.0, 'default_confidence': 0.8, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
+        'cpmsg': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
+        'cpgpt': {'default_scale': 1.0, 'default_confidence': 0.4, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
+        'sendinsta': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]}
     },
     'color_dict': {
         'newmsg': (38, 38, 38),
@@ -58,14 +56,13 @@ CONFIG = {
     'offsets': {
         'tools_y': -50,
         'msg_x': -40,
-        'msg_y': -75,
+        'msg_y': -90,
         'msg_relative_x': -30,
-        'msg_relative_y': -50
+        'msg_relative_y': -65
     },
-    'loop_count': 100,
+    'loop_count': 1000,
     'default_instagram_url': 'https://www.instagram.com/direct/t/17842735848513381/',
-    'default_prompt': 'سلام، لطفا جواب های کوتاه  و ساده بده...',
-    'config_file': 'image_configs.json'
+    'default_prompt': 'سلام، لطفا جواب های کوتاه و ساده بده...'
 }
 
 # متغیرهای جهانی
@@ -74,33 +71,6 @@ last_mouse_pos = None
 stop_reason = None
 screen_width, screen_height = pyautogui.size()
 scale_factor = 1.0
-
-def load_image_configs():
-    try:
-        if os.path.exists(CONFIG['config_file']):
-            with open(CONFIG['config_file'], 'r') as f:
-                loaded_configs = json.load(f)
-            for key in CONFIG['image_configs']:
-                if key in loaded_configs:
-                    CONFIG['image_configs'][key]['default_scale'] = loaded_configs[key].get('default_scale', 1.0)
-                    CONFIG['image_configs'][key]['default_confidence'] = loaded_configs[key].get('default_confidence', CONFIG['image_configs'][key]['default_confidence'])
-            logger.info("Loaded image configurations from JSON")
-    except Exception as e:
-        logger.error(f"Error loading image configs: {str(e)}")
-
-def save_image_configs():
-    try:
-        configs_to_save = {
-            key: {
-                'default_scale': CONFIG['image_configs'][key]['default_scale'],
-                'default_confidence': CONFIG['image_configs'][key]['default_confidence']
-            } for key in CONFIG['image_configs']
-        }
-        with open(CONFIG['config_file'], 'w') as f:
-            json.dump(configs_to_save, f, indent=4)
-        logger.info("Saved image configurations to JSON")
-    except Exception as e:
-        logger.error(f"Error saving image configs: {str(e)}")
 
 def resource_path(relative_path):
     try:
@@ -114,163 +84,140 @@ def resource_path(relative_path):
         logger.error(f"Error in resource_path: {str(e)}")
         return relative_path
 
-def find_image(image_path, image_key):
-    try:
-        if not os.path.exists(image_path):
-            logger.error(f"Image file {image_path} does not exist")
-            return None
-        template = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-        if template is None:
-            logger.error(f"Failed to load image {image_path}")
-            return None
-        
-        screenshot = pyautogui.screenshot()
-        screen_img = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2GRAY)
-        
-        best_score = -1
-        best_location = None
-        best_scale = CONFIG['image_configs'][image_key]['default_scale']
-        best_confidence = CONFIG['image_configs'][image_key]['default_confidence']
-        
-        # تست مقیاس و confidence پیش‌فرض
-        scaled_template = cv2.resize(template, None, fx=best_scale, fy=best_scale, interpolation=cv2.INTER_AREA)
-        result = cv2.matchTemplate(screen_img, scaled_template, cv2.TM_CCOEFF_NORMED)
-        _, max_val, _, max_loc = cv2.minMaxLoc(result)
-        if max_val >= best_confidence:
-            h, w = scaled_template.shape
-            best_score = max_val
-            best_location = (max_loc[0], max_loc[1], w, h)
-            logger.info(f"Image {image_path} found at {max_loc} with default scale {best_scale}, confidence {best_confidence}, score {max_val}")
-        
-        # Brute-force روی رنج مقیاس‌ها و confidence‌ها
-        for scale in CONFIG['image_configs'][image_key]['scale_range']:
-            for confidence in CONFIG['image_configs'][image_key]['confidence_range']:
-                if scale == best_scale and confidence == best_confidence:
-                    continue
-                scaled_template = cv2.resize(template, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
-                result = cv2.matchTemplate(screen_img, scaled_template, cv2.TM_CCOEFF_NORMED)
-                _, max_val, _, max_loc = cv2.minMaxLoc(result)
-                
-                if max_val >= confidence and max_val > best_score:
-                    h, w = scaled_template.shape
-                    best_score = max_val
-                    best_location = (max_loc[0], max_loc[1], w, h)
-                    best_scale = scale
-                    best_confidence = confidence
-                    logger.info(f"Image {image_path} found at {max_loc} with scale {scale}, confidence {confidence}, score {max_val}")
-        
-        if best_location:
-            CONFIG['image_configs'][image_key]['default_scale'] = best_scale
-            CONFIG['image_configs'][image_key]['default_confidence'] = best_confidence
-            save_image_configs()
-            return best_location
-        logger.info(f"Image {image_path} not found")
-        return None
-    except Exception as e:
-        logger.error(f"Error in find_image: {str(e)}")
-        return None
-
 def save_debug_image(img, name):
     os.makedirs("logs", exist_ok=True)
     path = f"logs/{datetime.now().strftime('%Y%m%d_%H%M%S')}_{name}.png"
     cv2.imwrite(path, img)
     print(f"[+] Saved: {path}")
 
-def find_image_smart(image_path, scales=np.arange(0.4, 1.5, 0.01).tolist(), min_confidence=0.75, upscale_template=2.0, region=None):
+def find_image_smart(image_path, image_key, scales=None, min_confidence=None, region=None):
     if not os.path.exists(image_path):
-        print("❌ Image not found:", image_path)
+        logger.error(f"Image not found: {image_path}")
+        print(f"❌ Image {image_key} not found: {image_path}")
         return None
 
-    # خواندن و بزرگ‌کردن تصویر مرجع
-    template = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    template = cv2.resize(template, None, fx=upscale_template, fy=upscale_template, interpolation=cv2.INTER_CUBIC)
+    try:
+        # خواندن تصویر قالب به‌صورت BGR (فرمت پیش‌فرض OpenCV)
+        template = cv2.imread(image_path)
+        if template is None:
+            logger.error(f"Failed to load image: {image_path}")
+            return None
 
-    # اسکرین‌شات
-    screenshot = pyautogui.screenshot()
-    screen_img_rgb = np.array(screenshot)
-    screen_img = cv2.cvtColor(screen_img_rgb, cv2.COLOR_RGB2GRAY)
+        if scales is None:
+            scales = CONFIG['image_configs'][image_key]['scale_range']
+        if min_confidence is None:
+            min_confidence = CONFIG['image_configs'][image_key]['default_confidence']
+        default_scale = CONFIG['image_configs'][image_key]['default_scale']
 
-    # اگر منطقه خاصی مشخص شده باشد، اسکرین‌شات را به آن محدوده برش می‌دهیم
-    if region:
-        x, y, w, h = region
-        screen_img = screen_img[y:y+h, x:x+w]
-        screen_img_rgb = screen_img_rgb[y:y+h, x:x+w]
-        # ذخیره تصویر محدوده برای دیباگ
-        save_debug_image(cv2.cvtColor(screen_img_rgb, cv2.COLOR_RGB2BGR), f"region_{os.path.basename(image_path)}_debug")
+        scales = [s * scale_factor for s in scales]
 
-    # ذخیره نسخه اولیه
-    save_debug_image(template, "template_scaled")
-    save_debug_image(screen_img, "screenshot_gray")
+        # گرفتن اسکرین‌شات که به‌صورت RGB است
+        screenshot = pyautogui.screenshot()
+        screen_img_rgb = np.array(screenshot)
+        # تبدیل اسکرین‌شات از RGB به BGR برای سازگاری با OpenCV
+        screen_img_bgr = cv2.cvtColor(screen_img_rgb, cv2.COLOR_RGB2BGR)
 
-    best_val = 0
-    best_rect = None
+        if region:
+            x, y, w, h = region
+            if w <= 0 or h <= 0 or x < 0 or y < 0:
+                logger.error(f"Invalid region: {region}")
+                return None
+            screen_img_bgr = screen_img_bgr[y:y+h, x:x+w]
 
-    for scale in scales:
-        resized_template = cv2.resize(template, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
-        result = cv2.matchTemplate(screen_img, resized_template, cv2.TM_CCOEFF_NORMED)
-        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+        # ذخیره تصاویر برای دیباگ (در فضای BGR)
+        save_debug_image(template, f"template_{image_key}")
+        save_debug_image(screen_img_bgr, f"screenshot_{image_key}")
 
-        print(f"Scale {scale:.2f} → Score: {max_val:.4f}")
-        if max_val > best_val:
-            h, w = resized_template.shape
+        best_val = 0
+        best_rect = None
+        best_scale = default_scale
+
+        # تغییر اندازه تصویر قالب با مقیاس پیش‌فرض
+        resized_template = cv2.resize(template, None, fx=default_scale, fy=default_scale, interpolation=cv2.INTER_AREA)
+        result = cv2.matchTemplate(screen_img_bgr, resized_template, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, max_loc = cv2.minMaxLoc(result)
+        print(f"Scale {default_scale:.2f} → Score: {max_val:.4f}")
+        if max_val >= min_confidence:
+            h, w = resized_template.shape[:2]
             best_val = max_val
-            # اگر منطقه خاصی مشخص شده باشد، مختصات را نسبت به منطقه تنظیم می‌کنیم
             if region:
                 best_rect = (max_loc[0] + x, max_loc[1] + y, w, h)
             else:
                 best_rect = (max_loc[0], max_loc[1], w, h)
+            logger.info(f"Found {image_key} with default scale={default_scale:.2f}, confidence={max_val:.3f}")
 
-    if best_val >= min_confidence:
-        x, y, w, h = best_rect
-        print(f"✅ Match at ({x},{y}) size=({w}x{h}) | confidence={best_val:.3f}")
-        cv2.rectangle(screen_img_rgb, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        save_debug_image(cv2.cvtColor(screen_img_rgb, cv2.COLOR_RGB2BGR), "match_result")
-        return (x, y, w, h)
-    else:
-        print(f"❌ No good match found. Best confidence: {best_val:.3f}")
+        if not best_rect:
+            for scale in scales:
+                if abs(scale - default_scale) < 0.01:
+                    continue
+                resized_template = cv2.resize(template, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+                result = cv2.matchTemplate(screen_img_bgr, resized_template, cv2.TM_CCOEFF_NORMED)
+                _, max_val, _, max_loc = cv2.minMaxLoc(result)
+                if max_val > best_val:
+                    h, w = resized_template.shape[:2]
+                    best_val = max_val
+                    best_scale = scale
+                    if region:
+                        best_rect = (max_loc[0] + x, max_loc[1] + y, w, h)
+                    else:
+                        best_rect = (max_loc[0], max_loc[1], w, h)
+
+        if best_val >= min_confidence:
+            x, y, w, h = best_rect
+            CONFIG['image_configs'][image_key]['default_scale'] = best_scale
+            logger.info(f"Updated config for {image_key}: scale={best_scale:.2f}, confidence={best_val:.3f}")
+            print(f"✅ Match for {image_key} at ({x},{y}) size=({w}x{h}) | confidence={best_val:.3f}")
+            # رسم مستطیل روی تصویر (در فضای BGR)
+            cv2.rectangle(screen_img_bgr, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            save_debug_image(screen_img_bgr, f"match_result_{image_key}")
+            return (x, y, w, h)
+        else:
+            logger.warning(f"No good match for {image_key}. Best confidence: {best_val:.3f}")
+            print(f"❌ No good match found for {image_key}. Best confidence: {best_val:.3f}")
+            return None
+
+    except Exception as e:
+        logger.error(f"Error in find_image_smart for {image_key}: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
         return None
-
-def wait_for_image(image_path, image_key, timeout=CONFIG['image_timeout']):
+    
+def wait_for_image(image_path, image_key, timeout=CONFIG['image_timeout'], region=None):
     try:
+        timeout = float(timeout)
         start_time = time.time()
         while time.time() - start_time < timeout:
-            # if find_image(image_path, image_key):
-            if find_image_smart(image_path):
-
-                logger.info(f"Image {image_path} found within {timeout} seconds")
+            if find_image_smart(image_path, image_key, region=region):
+                logger.info(f"Image {image_key} found within {timeout} seconds")
                 return True
-            time.sleep(0.5)
-        logger.warning(f"Image {image_path} not found within {timeout} seconds")
+            time.sleep(0.1)
+        logger.warning(f"Image {image_key} not found within {timeout} seconds")
         return False
     except Exception as e:
         logger.error(f"Error in wait_for_image: {str(e)}")
         return False
 
-def click_on_image(image_path, image_key, confidence=None):
+def click_on_image(image_path, image_key, confidence=None, region=None):
     try:
-        # استفاده از confidence خاص اگه تعریف شده باشه
-        conf = confidence if confidence is not None else CONFIG['image_configs'][image_key]['default_confidence']
-        if wait_for_image(image_path, image_key):
-            # location = find_image(image_path, image_key)
-            location = find_image_smart(image_path)
+        min_conf = confidence if confidence is not None else CONFIG['image_configs'][image_key]['default_confidence']
+        if wait_for_image(image_path, image_key, timeout=CONFIG['image_timeout'], region=region):
+            location = find_image_smart(image_path, image_key, min_confidence=min_conf, region=region)
             if location:
                 center_x = location[0] + location[2] // 2
                 center_y = location[1] + location[3] // 2
                 pyautogui.click(center_x, center_y)
-                logger.info(f"Clicked on image {image_path} at ({center_x}, {center_y})")
+                logger.info(f"Clicked on {image_key} at ({center_x}, {center_y})")
                 return True
-        logger.warning(f"Image {image_path} not found for click")
+        logger.warning(f"Image {image_key} not found for click")
         return False
     except Exception as e:
         logger.error(f"Error in click_on_image: {str(e)}")
         return False
 
-def click_relative_to_image(image_path, image_key, offset_x=0, offset_y=0):
+def click_relative_to_image(image_path, image_key, offset_x=0, offset_y=0, region=None):
     try:
-        if wait_for_image(image_path, image_key):
-            # location = find_image(image_path, image_key)
-            location = find_image_smart(image_path)
-
+        if wait_for_image(image_path, image_key, timeout=CONFIG['image_timeout'], region=region):
+            location = find_image_smart(image_path, image_key, region=region)
             if location:
                 center_x = location[0] + location[2] // 2
                 center_y = location[1] + location[3] // 2
@@ -280,20 +227,18 @@ def click_relative_to_image(image_path, image_key, offset_x=0, offset_y=0):
                     logger.error(f"Coordinates ({target_x}, {target_y}) are outside screen bounds")
                     return False
                 pyautogui.click(target_x, target_y)
-                logger.info(f"Clicked at ({target_x}, {target_y}) relative to image {image_path}")
+                logger.info(f"Clicked at ({target_x}, {target_y}) relative to image {image_key}")
                 return True
-        logger.warning(f"Image {image_path} not found for relative click")
+        logger.warning(f"Image {image_key} not found for relative click")
         return False
     except Exception as e:
         logger.error(f"Error in click_relative_to_image: {str(e)}")
         return False
 
-def move_relative_to_image(image_path, image_key, offset_x=0, offset_y=0):
+def move_relative_to_image(image_path, image_key, offset_x=0, offset_y=0, region=None):
     try:
-        if wait_for_image(image_path, image_key):
-            # location = find_image(image_path, image_key)
-            location = find_image_smart(image_path)
-
+        if wait_for_image(image_path, image_key, timeout=CONFIG['image_timeout'], region=region):
+            location = find_image_smart(image_path, image_key, region=region)
             if location:
                 center_x = location[0] + location[2] // 2
                 center_y = location[1] + location[3] // 2
@@ -305,7 +250,7 @@ def move_relative_to_image(image_path, image_key, offset_x=0, offset_y=0):
                 pyautogui.moveTo(target_x, target_y)
                 logger.info(f"Mouse moved to ({target_x}, {target_y})")
                 return True
-        logger.warning(f"Image {image_path} not found for relative move")
+        logger.warning(f"Image {image_key} not found for relative move")
         return False
     except Exception as e:
         logger.error(f"Error in move_relative_to_image: {str(e)}")
@@ -313,65 +258,93 @@ def move_relative_to_image(image_path, image_key, offset_x=0, offset_y=0):
 
 def paste_at_cursor():
     try:
-        # تأخیر برای اطمینان از آماده بودن کلیپ‌بورد
         time.sleep(0.5)
-        # لاگ کردن محتوای کلیپ‌بورد
         clipboard_content = pyperclip.paste()
         logger.info(f"Clipboard content before paste: {clipboard_content[:50]}...")
         pyautogui.hotkey('ctrl', 'v')
-        time.sleep(0.5)  # تأخیر بعد از جایگذاری
+        time.sleep(0.5)
         logger.info("Pasted at current cursor position")
         return True
     except Exception as e:
         logger.error(f"Error in paste_at_cursor: {str(e)}")
         return False
 
-def capture_image_offset(image_path, image_key, offset_x=0, offset_y=0, region_size=(20, 30)):
+def capture_image_offset(image_path, image_key, offset_x=0, offset_y=0, region_size=(20, 30), region=None):
     try:
-        if wait_for_image(image_path, image_key):
-            # location = find_image(image_path, image_key)
-            location = find_image_smart(image_path)
-
+        if wait_for_image(image_path, image_key, timeout=CONFIG['image_timeout'], region=region):
+            location = find_image_smart(image_path, image_key, region=region)
             if location:
                 center_x = location[0] + location[2] // 2
                 center_y = location[1] + location[3] // 2
                 target_x = center_x + int(offset_x * scale_factor)
                 target_y = center_y + int(offset_y * scale_factor)
+                
+                # بررسی معتبر بودن مختصات
                 if not (0 <= target_x < screen_width and 0 <= target_y < screen_height):
                     logger.error(f"Coordinates ({target_x}, {target_y}) are outside screen bounds")
                     return None
-                screenshot = pyautogui.screenshot(region=(target_x, target_y, *region_size))
+                
+                # بررسی معتبر بودن محدوده برش
+                region_width, region_height = region_size
+                if (target_x + region_width > screen_width or 
+                    target_y + region_height > screen_height or 
+                    region_width <= 0 or region_height <= 0):
+                    logger.error(f"Invalid capture region: start=({target_x}, {target_y}), size={region_size}")
+                    return None
+                
+                # گرفتن اسکرین‌شات
+                screenshot = pyautogui.screenshot(region=(target_x, target_y, region_width, region_height))
+                screenshot_np = np.array(screenshot)  # به‌صورت RGB
+                screenshot_bgr = cv2.cvtColor(screenshot_np, cv2.COLOR_RGB2BGR)  # تبدیل به BGR
+                
+                # ذخیره تصویر برای دیباگ
                 logger.info(f"Screenshot {region_size} captured at ({target_x}, {target_y})")
-                return screenshot
-        logger.warning(f"Image {image_path} not found for capture")
+                save_debug_image(screenshot_bgr, f"captured_offset_{image_key}")
+                
+                return screenshot_bgr  # بازگشت تصویر در فضای BGR
+        logger.warning(f"Image {image_key} not found for capture")
         return None
     except Exception as e:
-        logger.error(f"Error in capture_image_offset: {str(e)}")
+        logger.error(f"Error in capture_image_offset for {image_key}: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
         return None
-
+    
 def find_closest_color(image, color_dict):
     try:
-        if not image:
+        if image is None:
+            logger.error("No image provided to find_closest_color")
             return None
-        pixels = list(image.getdata())
+        # تصویر به صورت آرایه NumPy (RGB) است
+        if len(image.shape) != 3 or image.shape[2] != 3:
+            logger.error(f"Invalid image format: shape={image.shape}")
+            return None
+        
+        # تبدیل آرایه به لیست پیکسل‌ها
+        pixels = image.reshape(-1, image.shape[2])
         color_count = {}
         for pixel in pixels:
-            if pixel in color_count:
-                color_count[pixel] += 1
-            else:
-                color_count[pixel] = 1
+            pixel_tuple = tuple(pixel)
+            color_count[pixel_tuple] = color_count.get(pixel_tuple, 0) + 1
+        
+        # پیدا کردن پرتکرارترین رنگ
         most_common_color = max(color_count, key=color_count.get)
-        min_total_distance = float('inf')
+        
+        # پیدا کردن نزدیک‌ترین رنگ در color_dict
+        min_distance = float('inf')
         closest_color_key = None
         for key, rgb in color_dict.items():
-            total_distance = sum(abs(most_common_color[i] - rgb[i]) for i in range(3))
-            if total_distance < min_total_distance:
-                min_total_distance = total_distance
+            distance = sum((most_common_color[i] - rgb[i]) ** 2 for i in range(3)) ** 0.5
+            if distance < min_distance:
+                min_distance = distance
                 closest_color_key = key
-        logger.info(f"Closest color found: {closest_color_key}")
+        
+        logger.info(f"Closest color found: {closest_color_key} (color={most_common_color}, distance={min_distance:.2f})")
         return closest_color_key
     except Exception as e:
         logger.error(f"Error in find_closest_color: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
         return None
 
 def check_browser():
@@ -417,7 +390,7 @@ def automation_loop(chatgpt_prompt, instagram_dm_url):
         logger.info(f"Starting automation loop. Screen: {screen_width}x{screen_height}")
         webbrowser.open(instagram_dm_url)
         webbrowser.open("https://chat.openai.com/")
-        time.sleep(5)  # Wait for browser to open
+        time.sleep(6)
         if not wait_for_image(resource_path(CONFIG['image_paths']['chatgpt']), 'chatgpt'):
             logger.error("Failed to load ChatGPT page")
             return
@@ -425,11 +398,12 @@ def automation_loop(chatgpt_prompt, instagram_dm_url):
         if not click_on_image(resource_path(CONFIG['image_paths']['chatgpt']), 'chatgpt'):
             return
         if not click_relative_to_image(
-            resource_path(CONFIG['image_paths']['tools']), 'tools',
+            resource_path(CONFIG['image_paths']['tools']),
+            'tools',
             offset_y=CONFIG['offsets']['tools_y']
         ):
             return
-        time.sleep(0.5)
+        time.sleep(0.1)
         pyperclip.copy(chatgpt_prompt)
         logger.info(f"Copied prompt to clipboard: {chatgpt_prompt[:50]}...")
         if not paste_at_cursor():
@@ -442,45 +416,46 @@ def automation_loop(chatgpt_prompt, instagram_dm_url):
                 logger.info(f"Automation stopped: {stop_reason or 'Unknown reason'}")
                 break
             captured_image = capture_image_offset(
-                resource_path(CONFIG['image_paths']['msg']), 'msg',
+                resource_path(CONFIG['image_paths']['msg']),
+                'msg',
                 offset_x=CONFIG['offsets']['msg_x'],
                 offset_y=CONFIG['offsets']['msg_y']
             )
-            if captured_image:
+            if captured_image is not None:
                 closest_color = find_closest_color(captured_image, CONFIG['color_dict'])
+                print(closest_color)
                 if closest_color == "newmsg":
                     if not click_on_image(resource_path(CONFIG['image_paths']['instagram']), 'instagram'):
                         continue
                     if not move_relative_to_image(
-                        resource_path(CONFIG['image_paths']['msg']), 'msg',
+                        resource_path(CONFIG['image_paths']['msg']),
+                        'msg',
                         offset_x=CONFIG['offsets']['msg_relative_x'],
                         offset_y=CONFIG['offsets']['msg_relative_y']
                     ):
                         continue
-                    # پیدا کردن موقعیت تصویر "msg" برای تعیین محدوده جستجوی "3dot"
-                    msg_location = find_image_smart(resource_path(CONFIG['image_paths']['msg']))
+                    msg_location = find_image_smart(resource_path(CONFIG['image_paths']['msg']), 'msg')
                     if msg_location:
                         msg_x, msg_y, msg_w, msg_h = msg_location
-                        # تعریف محدوده افقی برای جستجوی "3dot" (برای مثال، 200 پیکسل عرض و 100 پیکسل ارتفاع)
                         search_region = (
-                            msg_x - 100,  # شروع x (100 پیکسل قبل از تصویر msg)
-                            msg_y - 50,   # شروع y (50 پیکسل بالای تصویر msg)
-                            200,          # عرض محدوده
-                            100           # ارتفاع محدوده
-                        )
-                        # اطمینان از اینکه محدوده در محدوده صفحه است
-                        search_region = (
-                            max(0, search_region[0]),
-                            max(0, search_region[1]),
-                            min(screen_width - search_region[0], search_region[2]),
-                            min(screen_height - search_region[1], search_region[3])
+                            0,
+                            max(0, msg_y - 100),
+                            screen_width,
+                            min(screen_height - (msg_y - 100), 150)
                         )
                         logger.info(f"Searching for 3dot in region: {search_region}")
-                        # جستجوی "3dot" در محدوده مشخص‌شده
+                        try:
+                            region_screenshot = pyautogui.screenshot(region=search_region)
+                            region_img = np.array(region_screenshot)
+                            region_img_bgr = cv2.cvtColor(region_img, cv2.COLOR_RGB2BGR)
+                            save_debug_image(region_img_bgr, f"search_region_3dot")
+                            logger.info(f"Saved screenshot of search_region: {search_region}")
+                        except Exception as e:
+                            logger.error(f"Error capturing search_region screenshot: {str(e)}")
                         if not click_on_image(
                             resource_path(CONFIG['image_paths']['3dot']),
-                            '3dot',
-                            region=search_region
+                            '3dot'
+                            # region=search_region
                         ):
                             continue
                     else:
@@ -491,15 +466,17 @@ def automation_loop(chatgpt_prompt, instagram_dm_url):
                     if not click_on_image(resource_path(CONFIG['image_paths']['chatgpt']), 'chatgpt'):
                         continue
                     if not click_relative_to_image(
-                        resource_path(CONFIG['image_paths']['tools']), 'tools',
+                        resource_path(CONFIG['image_paths']['tools']),
+                        'tools',
                         offset_y=CONFIG['offsets']['tools_y']
                     ):
                         continue
-                    time.sleep(0.5)
+                    time.sleep(0.1)
                     if not paste_at_cursor():
                         continue
                     if not click_on_image(resource_path(CONFIG['image_paths']['sendgpt']), 'sendgpt'):
                         continue
+                    time.sleep(5)
                     if wait_for_image(resource_path(CONFIG['image_paths']['cpgpt']), 'cpgpt', timeout=15):
                         for _ in range(1):
                             if not click_on_image(resource_path(CONFIG['image_paths']['cpgpt']), 'cpgpt', confidence=0.6):
@@ -508,7 +485,7 @@ def automation_loop(chatgpt_prompt, instagram_dm_url):
                             continue
                         if not click_on_image(resource_path(CONFIG['image_paths']['msg']), 'msg', confidence=0.6):
                             continue
-                        time.sleep(0.5)
+                        time.sleep(0.1)
                         if not paste_at_cursor():
                             continue
                         if not click_on_image(resource_path(CONFIG['image_paths']['sendinsta']), 'sendinsta'):
@@ -516,10 +493,12 @@ def automation_loop(chatgpt_prompt, instagram_dm_url):
             else:
                 if not click_on_image(resource_path(CONFIG['image_paths']['instagram']), 'instagram'):
                     continue
-            time.sleep(0.5)
+            time.sleep(0.1)
         logger.info("Automation loop finished")
     except Exception as e:
         logger.error(f"Unexpected error in automation_loop: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
     finally:
         is_running = False
         stop_reason = stop_reason or "Loop completed"
@@ -555,10 +534,7 @@ if __name__ == "__main__":
     try:
         pyautogui.FAILSAFE = True
         last_mouse_pos = pyautogui.position()
-        
-        # بارگذاری تنظیمات مقیاس‌ها و confidence‌ها
-        load_image_configs()
-        
+
         try:
             import pygetwindow as gw
             window = gw.getWindowsWithTitle('Chrome')[0]
@@ -598,4 +574,3 @@ if __name__ == "__main__":
     finally:
         mouse_listener.stop()
         keyboard_listener.stop()
-        save_image_configs()
