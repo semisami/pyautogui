@@ -12,60 +12,104 @@ from tkinter import Tk, Button, Label, Text, Scrollbar, messagebox, END, RIGHT, 
 from tkinter import font as tkFont
 from pynput import mouse, keyboard
 from datetime import datetime
+import json
 
-# تنظیمات لاگینگ
-logging.basicConfig(
-    filename='automation.log',
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger()
+# Load configuration from config file
+def load_config():
+    config_path = os.path.join(os.path.dirname(__file__), 'config.json')
+    default_config = {
+        'logging': {
+            'enabled': True,
+            'filename': 'automation.log',
+            'level': 'INFO',
+            'max_size_bytes': 10485760,  # 10MB
+            'backup_count': 3
+        },
+        'screenshots': {
+            'enabled': False,
+            'save_directory': 'logs'
+        },
+        'automation': {
+            'confidence': 0.7,
+            'image_timeout': 10,
+            'browser_process_name': 'chrome',
+            'mouse_move_threshold': 1000,
+            'image_paths': {
+                'chatgpt': 'assets/chatGPT.png',
+                'tools': 'assets/tools.png',
+                'sendgpt': 'assets/sendgpt.png',
+                'msg': 'assets/msg.png',
+                'instagram': 'assets/instagram.png',
+                '3dot': 'assets/3dot.png',
+                'cpmsg': 'assets/cpmsg.png',
+                'cpgpt': 'assets/cpgpt.png',
+                'sendinsta': 'assets/sendinsta.png'
+            },
+            'image_configs': {
+                'chatgpt': {'default_scale': 1.0, 'default_confidence': 0.8, 'scale_range': np.arange(0.9, 1.1, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
+                'tools': {'default_scale': 1.0, 'default_confidence': 0.6, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
+                'sendgpt': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
+                'msg': {'default_scale': 1.0, 'default_confidence': 0.6, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
+                'instagram': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
+                '3dot': {'default_scale': 1.0, 'default_confidence': 0.65, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.65, 0.7, 0.75, 0.8]},
+                'cpmsg': {'default_scale': 1.0, 'default_confidence': 0.65, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.65, 0.7, 0.8, 0.9]},
+                'cpgpt': {'default_scale': 1.0, 'default_confidence': 0.4, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.4, 0.5, 0.6, 0.7]},
+                'sendinsta': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]}
+            },
+            'templates': [
+                {'name': 'msg', 'path': 'assets/msg.png'},
+                {'name': 'heart', 'path': 'assets/heart.png'}
+            ],
+            'strip_width': 10,
+            'background_threshold': 10,
+            'offsets': {
+                'tools_y': -50,
+                'msg_x': -40,
+                'msg_y': -90,
+                'msg_relative_x': -30,
+                'msg_relative_y': -65
+            },
+            'loop_count': 1000,
+            'default_instagram_url': 'https://www.instagram.com/direct/t/17842735848513381/',
+            'default_prompt': 'سلام، لطفا جواب های کوتاه و ساده بده...'
+        }
+    }
+    try:
+        if os.path.exists(config_path):
+            with open(config_path, 'r', encoding='utf-8') as f:
+                loaded_config = json.load(f)
+                # Merge loaded config with default to ensure all keys exist
+                def merge_dicts(default, loaded):
+                    for key, value in default.items():
+                        if key not in loaded:
+                            loaded[key] = value
+                        elif isinstance(value, dict):
+                            merge_dicts(value, loaded[key])
+                merge_dicts(default_config, loaded_config)
+                return loaded_config
+        return default_config
+    except Exception as e:
+        print(f"Error loading config: {e}")
+        return default_config
 
-# کانفیگ‌ها
-CONFIG = {
-    'confidence': 0.7,
-    'image_timeout': 10,
-    'browser_process_name': 'chrome',
-    'mouse_move_threshold': 1000,
-    'image_paths': {
-        'chatgpt': 'assets/chatGPT.png',
-        'tools': 'assets/tools.png',
-        'sendgpt': 'assets/sendgpt.png',
-        'msg': 'assets/msg.png',
-        'instagram': 'assets/instagram.png',
-        '3dot': 'assets/3dot.png',
-        'cpmsg': 'assets/cpmsg.png',
-        'cpgpt': 'assets/cpgpt.png',
-        'sendinsta': 'assets/sendinsta.png'
-    },
-    'image_configs': {
-        'chatgpt': {'default_scale': 1.0, 'default_confidence': 0.8, 'scale_range': np.arange(0.9, 1.1, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        'tools': {'default_scale': 1.0, 'default_confidence': 0.6, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        'sendgpt': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        'msg': {'default_scale': 1.0, 'default_confidence': 0.6, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        'instagram': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]},
-        '3dot': {'default_scale': 1.0, 'default_confidence': 0.65, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.65, 0.7, 0.75, 0.8]},
-        'cpmsg': {'default_scale': 1.0, 'default_confidence': 0.65, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.65, 0.7, 0.8, 0.9]},
-        'cpgpt': {'default_scale': 1.0, 'default_confidence': 0.4, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.4, 0.5, 0.6, 0.7]},
-        'sendinsta': {'default_scale': 1.0, 'default_confidence': 0.7, 'scale_range': np.arange(0.8, 1.2, 0.01).tolist(), 'confidence_range': [0.6, 0.7, 0.8, 0.9]}
-    },
-    'templates': [
-        {'name': 'msg', 'path': 'assets/msg.png'},
-        {'name': 'heart', 'path': 'assets/heart.png'}
-    ],
-    'strip_width': 10,
-    'background_threshold': 10,
-    'offsets': {
-        'tools_y': -50,
-        'msg_x': -40,
-        'msg_y': -90,
-        'msg_relative_x': -30,
-        'msg_relative_y': -65
-    },
-    'loop_count': 1000,
-    'default_instagram_url': 'https://www.instagram.com/direct/t/17842735848513381/',
-    'default_prompt': 'سلام، لطفا جواب های کوتاه و ساده بده...'
-}
+CONFIG = load_config()
+
+# Setup logging with rotation
+if CONFIG['logging']['enabled']:
+    from logging.handlers import RotatingFileHandler
+    logger = logging.getLogger()
+    logger.setLevel(getattr(logging, CONFIG['logging']['level']))
+    handler = RotatingFileHandler(
+        CONFIG['logging']['filename'],
+        maxBytes=CONFIG['logging']['max_size_bytes'],
+        backupCount=CONFIG['logging']['backup_count'],
+        encoding="utf-8"
+    )
+    handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logger.addHandler(handler)
+else:
+    logger = logging.getLogger()
+    logger.addHandler(logging.NullHandler())
 
 # متغیرهای جهانی
 is_running = False
@@ -87,10 +131,15 @@ def resource_path(relative_path):
         return relative_path
 
 def save_debug_image(img, name):
-    os.makedirs("logs", exist_ok=True)
-    path = f"logs/{datetime.now().strftime('%Y%m%d_%H%M%S')}_{name}.png"
-    cv2.imwrite(path, img)
-    logger.info(f"[+] Saved: {path}")
+    if not CONFIG['screenshots']['enabled']:
+        return
+    try:
+        os.makedirs(CONFIG['screenshots']['save_directory'], exist_ok=True)
+        path = f"{CONFIG['screenshots']['save_directory']}/{datetime.now().strftime('%Y%m%d_%H%M%S')}_{name}.png"
+        cv2.imwrite(path, img)
+        logger.info(f"[+] Saved: {path}")
+    except Exception as e:
+        logger.error(f"Error saving debug image: {str(e)}")
 
 def find_template(template_cfg):
     try:
@@ -116,13 +165,13 @@ def find_template(template_cfg):
 
 def capture_strip(template_loc, name):
     x, y, w, h = template_loc
-    strip_x = x + w//2 - CONFIG['strip_width']//2
+    strip_x = x + w//2 - CONFIG['automation']['strip_width']//2
     strip_y = 0
     strip_h = y - 30
     if strip_h <= 0:
         logger.error(f"Invalid strip height for {name}: {strip_h}")
         return None
-    shot = pyautogui.screenshot(region=(strip_x, strip_y, CONFIG['strip_width'], strip_h))
+    shot = pyautogui.screenshot(region=(strip_x, strip_y, CONFIG['automation']['strip_width'], strip_h))
     strip = cv2.cvtColor(np.array(shot), cv2.COLOR_RGB2BGR)
     save_debug_image(strip, f"vertical_strip_{name}")
     return strip
@@ -135,11 +184,11 @@ def analyze_strip(strip, name):
     H = len(means)
     for i in range(H-1, -1, -1):
         m = means[i]
-        if m <= CONFIG['background_threshold'] and not in_bg:
+        if m <= CONFIG['automation']['background_threshold'] and not in_bg:
             if start is not None:
                 msg_centers.append((i + start) // 2)
             in_bg, start = True, i
-        elif m > CONFIG['background_threshold'] and in_bg:
+        elif m > CONFIG['automation']['background_threshold'] and in_bg:
             in_bg, start = False, i
     if start is not None and not in_bg:
         msg_centers.append(start // 2)
@@ -152,7 +201,7 @@ def analyze_strip(strip, name):
 def detect_messages():
     msg_targets = []
     heart_bottom_y = 0
-    for tpl in CONFIG['templates']:
+    for tpl in CONFIG['automation']['templates']:
         loc = find_template(tpl)
         if not loc:
             continue
@@ -181,10 +230,10 @@ def find_image_smart(image_path, image_key, scales=None, min_confidence=None, re
             logger.error(f"Failed to load image: {image_path}")
             return None
         if scales is None:
-            scales = CONFIG['image_configs'][image_key]['scale_range']
+            scales = CONFIG['automation']['image_configs'][image_key]['scale_range']
         if min_confidence is None:
-            min_confidence = CONFIG['image_configs'][image_key]['default_confidence']
-        default_scale = CONFIG['image_configs'][image_key]['default_scale']
+            min_confidence = CONFIG['automation']['image_configs'][image_key]['default_confidence']
+        default_scale = CONFIG['automation']['image_configs'][image_key]['default_scale']
         scales = [s * scale_factor for s in scales]
         screenshot = pyautogui.screenshot()
         screen_img_rgb = np.array(screenshot)
@@ -195,8 +244,8 @@ def find_image_smart(image_path, image_key, scales=None, min_confidence=None, re
                 logger.error(f"Invalid region: {region}")
                 return None
             screen_img_bgr = screen_img_bgr[y:y+h, x:x+w]
-        save_debug_image(template, f"template_{image_key}")
         save_debug_image(screen_img_bgr, f"screenshot_{image_key}")
+        save_debug_image(template, f"template_{image_key}")
         best_val = 0
         best_rect = None
         best_scale = default_scale
@@ -228,7 +277,7 @@ def find_image_smart(image_path, image_key, scales=None, min_confidence=None, re
                         best_rect = (max_loc[0], max_loc[1], w, h)
         if best_val >= min_confidence:
             x, y, w, h = best_rect
-            CONFIG['image_configs'][image_key]['default_scale'] = best_scale
+            CONFIG['automation']['image_configs'][image_key]['default_scale'] = best_scale
             logger.info(f"Updated config for {image_key}: scale={best_scale:.2f}, confidence={best_val:.3f}")
             return (x, y, w, h)
         else:
@@ -238,16 +287,16 @@ def find_image_smart(image_path, image_key, scales=None, min_confidence=None, re
         logger.error(f"Error in find_image_smart for {image_key}: {str(e)}")
         return None
 
-def wait_for_image(image_path, image_key, timeout=CONFIG['image_timeout'], region=None):
+def wait_for_image(image_path, image_key, timeout=CONFIG['automation']['image_timeout'], region=None):
     try:
         timeout = float(timeout)
         start_time = time.time()
         while time.time() - start_time < timeout:
             if find_image_smart(image_path, image_key, region=region):
-                logger.info(f"Image {image_key} found within {timeout} seconds")
+                logger.info(f"Image found {image_key} found within {timeout} seconds")
                 return True
             time.sleep(0.1)
-        logger.warning(f"Image {image_key} not found within {timeout} seconds")
+        logger.warning(f"Image not {image_key} not found within {timeout} seconds")
         return False
     except Exception as e:
         logger.error(f"Error in wait_for_image: {str(e)}")
@@ -262,8 +311,8 @@ def smooth_click(x, y):
 
 def click_on_image(image_path, image_key, confidence=None, region=None):
     try:
-        min_conf = confidence if confidence is not None else CONFIG['image_configs'][image_key]['default_confidence']
-        if wait_for_image(image_path, image_key, timeout=CONFIG['image_timeout'], region=region):
+        min_conf = confidence if confidence is not None else CONFIG['automation']['image_configs'][image_key]['default_confidence']
+        if wait_for_image(image_path, image_key, timeout=CONFIG['automation']['image_timeout'], region=region):
             location = find_image_smart(image_path, image_key, min_confidence=min_conf, region=region)
             if location:
                 center_x = location[0] + location[2] // 2
@@ -279,7 +328,7 @@ def click_on_image(image_path, image_key, confidence=None, region=None):
 
 def click_relative_to_image(image_path, image_key, offset_x=0, offset_y=0, region=None):
     try:
-        if wait_for_image(image_path, image_key, timeout=CONFIG['image_timeout'], region=region):
+        if wait_for_image(image_path, image_key, timeout=CONFIG['automation']['image_timeout'], region=region):
             location = find_image_smart(image_path, image_key, region=region)
             if location:
                 center_x = location[0] + location[2] // 2
@@ -330,12 +379,12 @@ def find_cpmsg_for_message(y, height=400):
         save_debug_image(region_img_bgr, f"search_region_cpmsg_y_{y}")
     except Exception as e:
         logger.error(f"Error capturing cpmsg search_region screenshot: {str(e)}")
-    return find_image_smart(resource_path(CONFIG['image_paths']['cpmsg']), 'cpmsg', region=region, min_confidence=0.65)
+    return find_image_smart(resource_path(CONFIG['automation']['image_paths']['cpmsg']), 'cpmsg', region=region, min_confidence=0.65)
 
 def check_browser():
     try:
         for proc in psutil.process_iter(['name']):
-            if proc.info['name'].lower().startswith(CONFIG['browser_process_name']):
+            if proc.info['name'].lower().startswith(CONFIG['automation']['browser_process_name']):
                 return True
         logger.warning("Browser process not found")
         messagebox.showwarning("Warning", "Closing the browser will disrupt the automation process!")
@@ -351,7 +400,7 @@ def on_move(x, y):
             return
         if last_mouse_pos:
             distance = ((x - last_mouse_pos[0])**2 + (y - last_mouse_pos[1])**2)**0.5
-            if distance > CONFIG['mouse_move_threshold']:
+            if distance > CONFIG['automation']['mouse_move_threshold']:
                 logger.info(f"User intervention detected: Mouse moved {distance} pixels")
                 is_running = False
                 stop_reason = "Mouse movement detected"
@@ -376,15 +425,15 @@ def automation_loop(chatgpt_prompt, instagram_dm_url):
         webbrowser.open(instagram_dm_url)
         webbrowser.open("https://chat.openai.com/")
         time.sleep(10)
-        if not wait_for_image(resource_path(CONFIG['image_paths']['chatgpt']), 'chatgpt'):
+        if not wait_for_image(resource_path(CONFIG['automation']['image_paths']['chatgpt']), 'chatgpt'):
             logger.error("Failed to load ChatGPT page")
             return
-        if not click_on_image(resource_path(CONFIG['image_paths']['chatgpt']), 'chatgpt'):
+        if not click_on_image(resource_path(CONFIG['automation']['image_paths']['chatgpt']), 'chatgpt'):
             return
         if not click_relative_to_image(
-            resource_path(CONFIG['image_paths']['tools']),
+            resource_path(CONFIG['automation']['image_paths']['tools']),
             'tools',
-            offset_y=CONFIG['offsets']['tools_y']
+            offset_y=CONFIG['automation']['offsets']['tools_y']
         ):
             return
         time.sleep(0.3)
@@ -392,20 +441,49 @@ def automation_loop(chatgpt_prompt, instagram_dm_url):
         logger.info(f"Copied prompt to clipboard: {chatgpt_prompt[:50]}...")
         if not paste_at_cursor():
             return
-        if not click_on_image(resource_path(CONFIG['image_paths']['sendgpt']), 'sendgpt'):
+        if not click_on_image(resource_path(CONFIG['automation']['image_paths']['sendgpt']), 'sendgpt'):
             return
 
-        for i in range(CONFIG['loop_count']):
+        for i in range(CONFIG['automation']['loop_count']):
             if not is_running or not check_browser():
                 logger.info(f"Automation stopped: {stop_reason or 'Unknown reason'}")
                 break
 
-            # استخراج پیام‌های جدید
-            messages = detect_messages()
-            temp_messages = []
-            if not click_on_image(resource_path(CONFIG['image_paths']['instagram']), 'instagram'):
+            if not click_on_image(resource_path(CONFIG['automation']['image_paths']['instagram']), 'instagram'):
                 logger.warning("Failed to click on Instagram, continuing loop")
                 continue
+
+            # استخراج پیام‌های جدید
+            messages = detect_messages()
+            if messages:
+                logger.info(f"تشخیص {len(messages)} پیام جدید، شروع بررسی تغییرات")
+                # ذخیره تصویر اولیه محدوده پیام‌ها
+                message_region = (0, 0, screen_width, screen_height)  # کل صفحه، در صورت نیاز محدوده را تنظیم کنید
+                initial_image = pyautogui.screenshot(region=message_region)
+                initial_image = cv2.cvtColor(np.array(initial_image), cv2.COLOR_RGB2BGR)
+                
+                while True:
+                    time.sleep(5)
+                    current_image = pyautogui.screenshot(region=message_region)
+                    current_image = cv2.cvtColor(np.array(current_image), cv2.COLOR_RGB2BGR)
+                    
+                    # محاسبه اختلاف پیکسلی
+                    diff = cv2.absdiff(initial_image, current_image)
+                    non_zero_count = np.count_nonzero(diff)
+                    
+                    if non_zero_count == 0:
+                        # تصاویر یکسان هستند، ادامه پردازش
+                        logger.info("پیام‌ها ثابت شدند، ادامه پردازش")
+                        break
+                    else:
+                        # تصاویر متفاوت هستند، به‌روزرسانی تصویر اولیه و ادامه صبر
+                        initial_image = current_image
+                        logger.info("پیام‌ها در حال تغییر هستند، صبر ۵ ثانیه دیگر")
+
+                messages = detect_messages()
+                logger.info(f"بعد از ثبات، {len(messages)} پیام تشخیص داده شد")
+
+            temp_messages = []
             for msg_x, msg_y in messages:
                 # هاور روی پیام برای ظاهر شدن سه نقطه
                 if not hover_on_message(msg_x, msg_y):
@@ -422,7 +500,7 @@ def automation_loop(chatgpt_prompt, instagram_dm_url):
                 except Exception as e:
                     logger.error(f"Error capturing 3dot search_region screenshot: {str(e)}")
                 if not click_on_image(
-                    resource_path(CONFIG['image_paths']['3dot']),
+                    resource_path(CONFIG['automation']['image_paths']['3dot']),
                     '3dot',
                     region=search_region,
                     confidence=0.65
@@ -446,13 +524,13 @@ def automation_loop(chatgpt_prompt, instagram_dm_url):
             # ارسال پیام‌ها به ChatGPT
             if temp_messages:
                 logger.info(f"Processing {len(temp_messages)} messages in ChatGPT")
-                if not click_on_image(resource_path(CONFIG['image_paths']['chatgpt']), 'chatgpt'):
+                if not click_on_image(resource_path(CONFIG['automation']['image_paths']['chatgpt']), 'chatgpt'):
                     logger.warning("Failed to click on ChatGPT, continuing loop")
                     continue
                 if not click_relative_to_image(
-                    resource_path(CONFIG['image_paths']['tools']),
+                    resource_path(CONFIG['automation']['image_paths']['tools']),
                     'tools',
-                    offset_y=CONFIG['offsets']['tools_y']
+                    offset_y=CONFIG['automation']['offsets']['tools_y']
                 ):
                     logger.warning("Failed to click on tools, continuing loop")
                     continue
@@ -463,26 +541,26 @@ def automation_loop(chatgpt_prompt, instagram_dm_url):
                 if not paste_at_cursor():
                     logger.warning("Failed to paste messages in ChatGPT, continuing loop")
                     continue
-                if not click_on_image(resource_path(CONFIG['image_paths']['sendgpt']), 'sendgpt'):
+                if not click_on_image(resource_path(CONFIG['automation']['image_paths']['sendgpt']), 'sendgpt'):
                     logger.warning("Failed to click sendgpt, continuing loop")
                     continue
                 time.sleep(5)
-                if wait_for_image(resource_path(CONFIG['image_paths']['cpgpt']), 'cpgpt', timeout=15):
+                if wait_for_image(resource_path(CONFIG['automation']['image_paths']['cpgpt']), 'cpgpt', timeout=15):
                     for _ in range(1):
-                        if not click_on_image(resource_path(CONFIG['image_paths']['cpgpt']), 'cpgpt', confidence=0.6):
+                        if not click_on_image(resource_path(CONFIG['automation']['image_paths']['cpgpt']), 'cpgpt', confidence=0.6):
                             logger.warning("Failed to click cpgpt, breaking inner loop")
                             break
-                    if not click_on_image(resource_path(CONFIG['image_paths']['instagram']), 'instagram'):
+                    if not click_on_image(resource_path(CONFIG['automation']['image_paths']['instagram']), 'instagram'):
                         logger.warning("Failed to click Instagram after ChatGPT, continuing loop")
                         continue
-                    if not click_on_image(resource_path(CONFIG['image_paths']['msg']), 'msg', confidence=0.6):
+                    if not click_on_image(resource_path(CONFIG['automation']['image_paths']['msg']), 'msg', confidence=0.6):
                         logger.warning("Failed to click msg, continuing loop")
                         continue
                     time.sleep(0.3)
                     if not paste_at_cursor():
                         logger.warning("Failed to paste response in Instagram, continuing loop")
                         continue
-                    if not click_on_image(resource_path(CONFIG['image_paths']['sendinsta']), 'sendinsta'):
+                    if not click_on_image(resource_path(CONFIG['automation']['image_paths']['sendinsta']), 'sendinsta'):
                         logger.warning("Failed to click sendinsta, continuing loop")
                         continue
                 else:
@@ -560,7 +638,7 @@ if __name__ == "__main__":
         instagram_entry = Text(insta_frame, height=3, font=style_font, bg=entry_bg, fg=entry_fg, insertbackground="white", relief="flat", wrap="word", yscrollcommand=insta_scroll.set)
         instagram_entry.pack(side=LEFT, fill=BOTH, expand=True)
         insta_scroll.config(command=instagram_entry.yview)
-        instagram_entry.insert(END, CONFIG['default_instagram_url'])
+        instagram_entry.insert(END, CONFIG['automation']['default_instagram_url'])
         Label(root, text="💬 ChatGPT Prompt:", font=style_font, fg=label_fg, bg=root["bg"]).pack(pady=(10, 0))
         prompt_frame = Frame(root, bg=root["bg"])
         prompt_frame.pack(pady=5, fill=BOTH, padx=10)
@@ -569,7 +647,7 @@ if __name__ == "__main__":
         prompt_entry = Text(prompt_frame, height=3, font=style_font, bg=entry_bg, fg=entry_fg, insertbackground="white", relief="flat", wrap="word", yscrollcommand=prompt_scroll.set)
         prompt_entry.pack(side=LEFT, fill=BOTH, expand=True)
         prompt_scroll.config(command=prompt_entry.yview)
-        prompt_entry.insert(END, CONFIG['default_prompt'])
+        prompt_entry.insert(END, CONFIG['automation']['default_prompt'])
         start_button = Button(root, text="▶ Start Automation", font=style_font, bg=btn_bg, fg=btn_fg, width=30, height=2, relief="flat", command=toggle_automation)
         start_button.pack(pady=(15, 5))
         Button(root, text="❌ Exit", font=style_font, bg="#cc0000", fg="white", width=30, height=2, relief="flat", command=root.quit).pack()
