@@ -8,7 +8,9 @@ import pyperclip
 import psutil
 import cv2
 import numpy as np
-from tkinter import Tk, Button, Label, Entry, messagebox
+# from tkinter import Tk, Button, Label, Entry, messagebox
+from tkinter import Tk, Button, Label, Text, Scrollbar, messagebox, END, RIGHT, Y, LEFT, BOTH, Frame
+from tkinter import font as tkFont
 from pynput import mouse, keyboard
 from datetime import datetime
 
@@ -507,8 +509,9 @@ def toggle_automation():
     global is_running, stop_reason
     try:
         if not is_running:
-            dm_url = instagram_entry.get()
-            prompt_text = prompt_entry.get()
+            dm_url = instagram_entry.get("1.0", END).strip()
+            prompt_text = prompt_entry.get("1.0", END).strip()
+
             if not dm_url or not prompt_text:
                 messagebox.showerror("Error", "Please enter both Instagram URL and ChatGPT prompt")
                 logger.error("Empty Instagram URL or prompt")
@@ -550,25 +553,61 @@ if __name__ == "__main__":
         keyboard_listener.start()
 
         root = Tk()
-        root.title("Automation Controller")
-        root.geometry("400x250")
+        root.title("🔥 Automation Controller 🔧")
+        root.geometry("600x500")
+        root.configure(bg="#1e1e1e")
 
-        Label(root, text="Instagram DM URL:", font=("Arial", 10)).pack(pady=(10, 0))
-        instagram_entry = Entry(root, width=50)
-        instagram_entry.pack(pady=5)
-        instagram_entry.insert(0, CONFIG['default_instagram_url'])
+        style_font = ("Segoe UI", 10)
+        label_fg = "#ffffff"
+        entry_bg = "#2d2d2d"
+        entry_fg = "#ffffff"
+        btn_bg = "#007acc"
+        btn_fg = "#ffffff"
 
-        Label(root, text="ChatGPT Prompt:", font=("Arial", 10)).pack(pady=(10, 0))
-        prompt_entry = Entry(root, width=50)
-        prompt_entry.pack(pady=5)
-        prompt_entry.insert(0, CONFIG['default_prompt'])
+        # --- Instagram URL ---
+        Label(root, text="📥 Instagram DM URL:", font=style_font, fg=label_fg, bg=root["bg"]).pack(pady=(15, 0))
+        insta_frame = Frame(root, bg=root["bg"])
+        insta_frame.pack(pady=5, fill=BOTH, padx=10)
 
-        start_button = Button(root, text="Start Automation", command=toggle_automation, width=25, height=2)
-        start_button.pack(pady=15)
+        insta_scroll = Scrollbar(insta_frame)
+        insta_scroll.pack(side=RIGHT, fill=Y)
 
-        Button(root, text="Exit", command=root.quit, width=25, height=2).pack(pady=5)
+        instagram_entry = Text(insta_frame, height=3, font=style_font, bg=entry_bg, fg=entry_fg, insertbackground="white", relief="flat", wrap="word", yscrollcommand=insta_scroll.set)
+        instagram_entry.pack(side=LEFT, fill=BOTH, expand=True)
+        insta_scroll.config(command=instagram_entry.yview)
+        instagram_entry.insert(END, CONFIG['default_instagram_url'])
+
+        # --- ChatGPT Prompt ---
+        Label(root, text="💬 ChatGPT Prompt:", font=style_font, fg=label_fg, bg=root["bg"]).pack(pady=(10, 0))
+        prompt_frame = Frame(root, bg=root["bg"])
+        prompt_frame.pack(pady=5, fill=BOTH, padx=10)
+
+        prompt_scroll = Scrollbar(prompt_frame)
+        prompt_scroll.pack(side=RIGHT, fill=Y)
+
+        prompt_entry = Text(prompt_frame, height=3, font=style_font, bg=entry_bg, fg=entry_fg, insertbackground="white", relief="flat", wrap="word", yscrollcommand=prompt_scroll.set)
+        prompt_entry.pack(side=LEFT, fill=BOTH, expand=True)
+        prompt_scroll.config(command=prompt_entry.yview)
+        prompt_entry.insert(END, CONFIG['default_prompt'])
+
+        # --- Buttons ---
+        start_button = Button(root, text="▶ Start Automation", font=style_font, bg=btn_bg, fg=btn_fg, width=30, height=2, relief="flat", command=toggle_automation)
+        start_button.pack(pady=(15, 5))
+
+        Button(root, text="❌ Exit", font=style_font, bg="#cc0000", fg="white", width=30, height=2, relief="flat", command=root.quit).pack()
+
+        # --- Static Info Text ---
+        Label(root,
+            text="ℹ اگر موس رو تکون بدین، برنامه متوقف میشه\nو اینکه قبل از اجرا زبان کیبورد رو انگلیسی کنید",
+            font=("Segoe UI", 9, "italic"),
+            fg="#cccccc",
+            bg=root["bg"],
+            justify="center").pack(pady=(15, 10))
 
         root.mainloop()
+
+
+
     except Exception as e:
         logger.error(f"Unexpected error in main: {str(e)}")
     finally:

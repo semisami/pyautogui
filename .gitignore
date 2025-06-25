@@ -5,4 +5,4 @@
 /build
 automation.log
 image_configs.json
-
+*.spec
