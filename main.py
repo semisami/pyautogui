@@ -145,7 +145,7 @@ def find_template(template_cfg):
     try:
         screenshot = pyautogui.screenshot()
         screen = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
-        tpl = cv2.imread(template_cfg['path'])
+        tpl = cv2.imread(resource_path(template_cfg['path']))
         if tpl is None:
             logger.error(f"Failed to load template: {template_cfg['path']}")
             return None
@@ -621,7 +621,7 @@ if __name__ == "__main__":
         mouse_listener.start()
         keyboard_listener.start()
         root = Tk()
-        root.title("🔥 Automation Controller 🔧")
+        root.title("Instagram Admin Assistant")
         root.geometry("600x500")
         root.configure(bg="#1e1e1e")
         style_font = ("Segoe UI", 10)
@@ -652,7 +652,7 @@ if __name__ == "__main__":
         start_button.pack(pady=(15, 5))
         Button(root, text="❌ Exit", font=style_font, bg="#cc0000", fg="white", width=30, height=2, relief="flat", command=root.quit).pack()
         Label(root,
-            text="ℹ اگر موس رو تکون بدین، برنامه متوقف میشه\nو اینکه قبل از اجرا زبان کیبورد رو انگلیسی کنید",
+            text="Moving the mouse will stop the program.\nPlease ensure the keyboard language is set to English before running.",
             font=("Segoe UI", 9, "italic"),
             fg="#cccccc",
             bg=root["bg"],
