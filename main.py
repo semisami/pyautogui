@@ -60,7 +60,7 @@ def load_config():
                 {'name': 'msg', 'path': 'assets/msg.png'},
                 {'name': 'heart', 'path': 'assets/heart.png'}
             ],
-            'strip_width': 10,
+            'strip_width': 20,
             'background_threshold': 10,
             'offsets': {
                 'tools_y': -50,
@@ -545,7 +545,7 @@ def automation_loop(chatgpt_prompt, instagram_dm_url):
                     logger.warning("Failed to click sendgpt, continuing loop")
                     continue
                 time.sleep(5)
-                if wait_for_image(resource_path(CONFIG['automation']['image_paths']['cpgpt']), 'cpgpt', timeout=15):
+                if wait_for_image(resource_path(CONFIG['automation']['image_paths']['cpgpt']), 'cpgpt', timeout=25):
                     for _ in range(1):
                         if not click_on_image(resource_path(CONFIG['automation']['image_paths']['cpgpt']), 'cpgpt', confidence=0.6):
                             logger.warning("Failed to click cpgpt, breaking inner loop")
